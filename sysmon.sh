@@ -8,6 +8,11 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m' 
 
+IS_ROOT=0
+if [ "$EUID" -eq 0 ]; then
+    IS_ROOT=1
+fi
+
 create_bar() {
     local percent=$1   
     local width=50
@@ -145,12 +150,16 @@ get_process_info() {
     local total_processes=$(ps aux | wc -l)
     local running_processes=$(ps aux | grep -c "R")
     local zombie_processes=$(ps aux | grep -c "Z")
-    local top_cpu=$(ps aux --sort=-%cpu | head -n 6 | tail -n 5)
+    local top_cpu=$(ps aux --sort=-%cpu | head -n 6)
 
     echo "$total_processes|$running_processes|$zombie_processes|$top_cpu "
 }
 
 get_smart_status() {
+    if [ "$IS_ROOT" -ne 1 ]; then
+        echo "ROOT_REQUIRED"
+        return
+    fi
     local smart_info=""
     if command -v smartctl >/dev/null 2>&1;
     then
@@ -163,11 +172,31 @@ get_smart_status() {
 }
 
 get_raid_status() {
+    if [ "$IS_ROOT" -ne 1 ]; then
+        echo "ROOT_REQUIRED"
+        return
+    fi
     local raid_info=""
     if [ -f "/proc/mdstat" ]; then
         raid_info=$(cat /proc/mdstat | grep ^md)
     fi
     echo "$raid_info"
+}
+
+get_zfs_status() {
+    if command -v zpool >/dev/null 2>&1; then
+        zpool status -x
+    fi
+}
+
+get_lvm_status() {
+    if command -v lvs >/dev/null 2>&1; then
+        if [ "$IS_ROOT" -ne 1 ]; then
+            echo "ROOT_REQUIRED"
+            return
+        fi
+        lvs --noheadings -o lv_name,vg_name,lv_size 2>/dev/null | awk '{print $1"|"$2"|"$3}'
+    fi
 }
 
 format_uptime() {
@@ -266,20 +295,41 @@ echo -e "\n${BOLD}Top CPU Processes:${NC}"
 echo "$top_cpu"
 
 smart_status=$(get_smart_status)
-if [ ! -z "$smart_status" ]; then
-    echo -e "\n${BOLD}Disk Health (SMART)${NC}"
-    echo "===================="
+if [ "$smart_status" == "ROOT_REQUIRED" ]; then
+    echo -e "SMART Health: ${YELLOW}Requires sudo/root privileges${NC}"
+elif [ ! -z "$smart_status" ]; then
+    echo -e "${BOLD}Disk Health (SMART):${NC}"
     while IFS='|' read -r disk status; do
         if [ ! -z "$disk" ]; then
-            printf "${BOLD}%s:${NC} ${CYAN}%s${NC}\n" "$disk" "$status"
+            printf "├─ %s: ${CYAN}%s${NC}\n" "$disk" "$status"
         fi
     done <<< "$smart_status"
 fi
 
 raid_status=$(get_raid_status)
-if [ ! -z "$raid_status" ];
-then
-    echo -e "\n${BOLD}RAID Status${NC}"
-    echo "===================="
+if [ "$raid_status" == "ROOT_REQUIRED" ]; then
+    echo -e "RAID Status:  ${YELLOW}Requires sudo/root privileges${NC}"
+elif [ ! -z "$raid_status" ]; then
+    echo -e "${BOLD}RAID Status:${NC}"
     echo -e "${CYAN}$raid_status${NC}"
 fi
+
+zfs_status=$(get_zfs_status)
+if [ ! -z "$zfs_status" ]; then
+    echo -e "${BOLD}ZFS Pool Status:${NC}"
+    echo -e "├─ ${CYAN}$zfs_status${NC}"
+fi
+
+lvm_status=$(get_lvm_status)
+if [ "$lvm_status" == "ROOT_REQUIRED" ]; then
+    echo -e "LVM Status:   ${YELLOW}Requires sudo/root privileges${NC}"
+elif [ ! -z "$lvm_status" ]; then
+    echo -e "${BOLD}Logical Volumes (LVM):${NC}"
+    while IFS='|' read -r lv vg size; do
+        if [ ! -z "$lv" ]; then
+            printf "├─ LV: ${CYAN}%s${NC} | VG: ${CYAN}%s${NC} | Size: ${CYAN}%s${NC}\n" "$lv" "$vg" "$size"
+        fi
+    done <<< "$lvm_status"
+fi
+
+echo ""
