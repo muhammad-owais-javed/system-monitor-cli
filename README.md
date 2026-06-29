@@ -1,14 +1,15 @@
 # system-monitor-cli
 
-A lightweight CLI tool providing real-time system monitoring with colorized visualizations. Features comprehensive hardware information, resource monitoring, and health checks for Linux/Unix systems and Proxmox environments. Perfect for system administrators who need quick insights through an intuitive interface.
+A lightweight CLI tool providing instant, comprehensive snapshot of system health with colorized visualizations. It is designed specifically for Linux systems and Proxmox environments to deliver quick insights into hardware, resources, and storage without the overhead of continuous monitoring tools. Perfect for quick checks or high load situations.
 
 ## Features
 
-- Real-time system resource monitoring with colorized progress bars
+- Snapshot of system resources with colorized progress bars
 - Comprehensive hardware information collection
 - Memory and swap usage analysis
 - Detailed CPU statistics and temperature monitoring
 - Disk usage and health status (SMART)
+- Native checks for ZFS pools, LVM volumes
 - Network interface statistics
 - Process monitoring with top CPU consumers
 - RAID status monitoring
@@ -16,8 +17,8 @@ A lightweight CLI tool providing real-time system monitoring with colorized visu
 
 ## Prerequisites
 
-- UNIX/Linux based OS
-- Root/sudo privileges
+- Linux based OS (Debian, Ubuntu, RHEL, Alpine, etc.) or Proxmox VE
+- Bash shell
 
 ### Optional dependencies:
 
@@ -27,21 +28,29 @@ A lightweight CLI tool providing real-time system monitoring with colorized visu
 
 ## Installation
 
-```bash
-# Clone the repository
+1. Clone the repository
+
+```sh
 git clone https://github.com/muhammad-owais-javed/system-monitor-cli.git
+```
 
-# Navigate to the directory
+2. Navigate to the directory
+
+```sh
 cd system-monitor-cli
-
-# Make the script executable
-chmod +x sysstat.sh
 ```
 
 ## Usage
 
-```bash
-sudo ./sysstat.sh
+Run as a standard user for basic system metrics:
+
+```sh
+./sysmon.sh
+```
+Run with sudo to unlock advanced storage metrics (SMART, RAID, LVM):
+
+```sh
+sudo ./sysmon.sh
 ```
 
 ## Output Sections
@@ -53,7 +62,7 @@ sudo ./sysstat.sh
 - Uptime statistics
 
 ### Resource Usage
-- CPU utilization and temperature
+- CPU utilization, frequency and temperature
 - Memory and swap usage
 - Load averages
 - Process statistics
@@ -62,19 +71,12 @@ sudo ./sysstat.sh
 - Partition usage statistics
 - Disk health status (SMART)
 - RAID array status (if applicable)
+- ZFS pool status, and LVM volumes
 
 ### Network Statistics
 - Interface status and speed
 - IP configuration
 - Traffic statistics (RX/TX)
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/newFeature`)
-3. Commit your changes (`git commit -m 'Add some New Feature'`)
-4. Push to the branch (`git push origin feature/newFeature`)
-5. Open a Pull Request
 
 ## License
 
@@ -83,9 +85,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Author
 
 Muhammad Owais Javed
-
-## Acknowledgments
-
-- Inspired by various system monitoring tools
-- Thanks to the Linux community for valuable resources
-- Special thanks to contributors and testers
