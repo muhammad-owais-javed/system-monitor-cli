@@ -135,7 +135,11 @@ get_network_info() {
     for interface in $(ls /sys/class/net/ | grep -v "lo"); do
         local state=$(cat /sys/class/net/$interface/operstate)
         local speed=$(cat /sys/class/net/$interface/speed 2>/dev/null || echo "N/A")
-        local ip_addr=$(ip addr show $interface | grep "inet " | awk '{print $2}' | cut -d/ -f1)
+        
+        local ip_addr=$(ip addr show $interface 2>/dev/null | grep -w "inet" | awk '{print $2}' | cut -d/ -f1)
+        if [ -z "$ip_addr" ]; then
+            ip_addr="Unassigned"
+        fi        
         local rx_bytes=$(cat /sys/class/net/$interface/statistics/rx_bytes)
         local tx_bytes=$(cat /sys/class/net/$interface/statistics/tx_bytes)
         local rx_mb=$((rx_bytes / 1024 / 1024))
