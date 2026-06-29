@@ -292,7 +292,7 @@ done < <(get_network_info)
 
 echo -e "\n${BOLD}Process Information${NC}"
 echo "===================="
-IFS='|' read -r total_proc running_proc zombie_proc <<< "$(get_process_stats)"
+IFS='|' read -r total_proc running_proc zombie_proc <<< "$(get_process_info)"
 printf "Total Processes: ${CYAN}%s${NC} | Running: ${CYAN}%s${NC} | Zombie: ${CYAN}%s${NC}\n" "$total_proc" "$running_proc" "$zombie_proc"
 
 echo -e "\n${BOLD}Top CPU Processes:${NC}"
