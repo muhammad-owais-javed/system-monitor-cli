@@ -148,11 +148,10 @@ get_network_info() {
 
 get_process_info() {
     local total_processes=$(ps aux | wc -l)
-    local running_processes=$(ps aux | grep -c "R")
-    local zombie_processes=$(ps aux | grep -c "Z")
-    local top_cpu=$(ps aux --sort=-%cpu | head -n 6)
+    local running_processes=$(ps aux | awk '{if ($8 ~ /^R/) print $0}' | wc -l)
+    local zombie_processes=$(ps aux | awk '{if ($8 ~ /^Z/) print $0}' | wc -l)
 
-    echo "$total_processes|$running_processes|$zombie_processes|$top_cpu "
+    echo "$total_processes|$running_processes|$zombie_processes"
 }
 
 get_smart_status() {
@@ -289,10 +288,11 @@ done < <(get_network_info)
 
 echo -e "\n${BOLD}Process Information${NC}"
 echo "===================="
-IFS='|' read -r total_proc running_proc zombie_proc top_cpu <<< "$(get_process_info)"
+IFS='|' read -r total_proc running_proc zombie_proc <<< "$(get_process_stats)"
 printf "Total Processes: ${CYAN}%s${NC} | Running: ${CYAN}%s${NC} | Zombie: ${CYAN}%s${NC}\n" "$total_proc" "$running_proc" "$zombie_proc"
+
 echo -e "\n${BOLD}Top CPU Processes:${NC}"
-echo "$top_cpu"
+ps aux --sort=-%cpu | head -n 6
 
 smart_status=$(get_smart_status)
 if [ "$smart_status" == "ROOT_REQUIRED" ]; then
