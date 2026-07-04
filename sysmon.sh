@@ -210,7 +210,6 @@ format_uptime() {
     echo "$days days, $hours hours, $minutes minutes"
 }
 
-# For clearing screen and set locale
 export LC_NUMERIC=C
 clear
 
